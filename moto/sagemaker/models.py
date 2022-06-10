@@ -242,6 +242,7 @@ class FakeEndpoint(BaseObject, CloudFormationModel):
         region_name,
         endpoint_name,
         endpoint_config_name,
+        deployment_config,
         production_variants,
         data_capture_config,
         tags,
@@ -249,6 +250,7 @@ class FakeEndpoint(BaseObject, CloudFormationModel):
         self.endpoint_name = endpoint_name
         self.endpoint_arn = FakeEndpoint.arn_formatter(endpoint_name, region_name)
         self.endpoint_config_name = endpoint_config_name
+        self.deployment_config = deployment_config
         self.production_variants = self._process_production_variants(
             production_variants
         )
@@ -1630,13 +1632,14 @@ class SageMakerModelBackend(BaseBackend):
             )
             raise ValidationError(message=message)
 
-    def create_endpoint(self, endpoint_name, endpoint_config_name, tags):
+    def create_endpoint(self, endpoint_name, endpoint_config_name, deployment_config, tags):
         endpoint_config = self._get_endpoint_config(endpoint_config_name)
 
         endpoint = FakeEndpoint(
             region_name=self.region_name,
             endpoint_name=endpoint_name,
             endpoint_config_name=endpoint_config_name,
+            deployment_config=deployment_config,
             production_variants=endpoint_config["ProductionVariants"],
             data_capture_config=endpoint_config["DataCaptureConfig"],
             tags=tags,
@@ -1974,11 +1977,37 @@ class SageMakerModelBackend(BaseBackend):
         endpoint = self._get_endpoint(endpoint_name)
         endpoint_config = self._get_endpoint_config(endpoint_config_name)
 
+        endpoint.endpoint_status = "Updating"
+
         if retain_all_variant_properties:
-            exclude_retained_variant_properties
-        else:
+            for variant_config in endpoint.production_variants:
+                name = variant_config.get("VariantName")
 
+                if "DesiredWeight" not in exclude_retained_variant_properties:
+                    desired_weight = variant_config.get("DesiredWeight")
 
+                if "DesiredInstanceCount" not in exclude_retained_variant_properties:
+                    desired_instance_count = variant_config.get("DesiredInstanceCount")
+
+                for variant in endpoint_config.production_variants:
+                    if variant.get("VariantName") == name:
+                        if "DesiredWeight" not in exclude_retained_variant_properties:
+                            variant["DesiredWeight"] = desired_weight
+                            variant["CurrentWeight"] = desired_weight
+                        if "DesiredInstanceCount" not in exclude_retained_variant_properties:
+                            variant["DesiredInstanceCount"] = desired_instance_count
+                            variant["CurrentInstanceCount"] = desired_instance_count
+                        break
+
+        if not retain_deployment_config:
+            endpoint.deployment_config = deployment_config
+
+        endpoint.endpoint_config_name = endpoint_config.endpoint_config_name
+        endpoint.last_modified_time = datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        endpoint.endpoint_status = "InService"
         return endpoint.endpoint_arn
     
 

@@ -485,6 +485,12 @@ def test_update_endpoint_weights_and_capacities_should_throw_clienterror_nonuniq
     del resp["ResponseMetadata"]
     resp.should.equal(old_resp)
 
+@mock_sagemaker
+def test_update_endpoint():
+    client = boto3.client("sagemaker", region_name="eu-west-1")
+    resp = client.update_endpoint()
+
+    raise Exception("NotYetImplemented")
 
 def _set_up_sagemaker_resources(
     boto_client,

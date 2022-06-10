@@ -173,6 +173,7 @@ class SageMakerResponse(BaseResponse):
         endpoint = self.sagemaker_backend.create_endpoint(
             endpoint_name=self._get_param("EndpointName"),
             endpoint_config_name=self._get_param("EndpointConfigName"),
+            deployment_config=self._get_param("DeploymentConfig"),
             tags=self._get_param("Tags"),
         )
         response = {
