@@ -1,5 +1,5 @@
 import ipaddress
-from moto.core import ACCOUNT_ID, CloudFormationModel
+from moto.core import get_account_id, CloudFormationModel
 from .core import TaggedEC2Resource
 from ..exceptions import (
     DependencyViolationError,
@@ -30,7 +30,7 @@ class RouteTable(TaggedEC2Resource, CloudFormationModel):
 
     @property
     def owner_id(self):
-        return ACCOUNT_ID
+        return get_account_id()
 
     @staticmethod
     def cloudformation_name_type():
@@ -76,6 +76,12 @@ class RouteTable(TaggedEC2Resource, CloudFormationModel):
             return self.associations.keys()
         elif filter_name == "association.subnet-id":
             return self.associations.values()
+        elif filter_name == "route.gateway-id":
+            return [
+                route.gateway.id
+                for route in self.routes.values()
+                if route.gateway is not None
+            ]
         else:
             return super().get_filter_value(filter_name, "DescribeRouteTables")
 

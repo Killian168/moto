@@ -15,7 +15,7 @@ import xmltodict
 
 from moto.core.responses import _TemplateEnvironmentMixin, ActionAuthenticatorMixin
 from moto.core.utils import path_url
-from moto.core import ACCOUNT_ID
+from moto.core import get_account_id
 
 from moto.s3bucket_path.utils import (
     bucket_name_from_url as bucketpath_bucket_name_from_url,
@@ -25,6 +25,7 @@ from moto.s3bucket_path.utils import (
 
 from .exceptions import (
     BucketAlreadyExists,
+    BucketAccessDeniedError,
     BucketMustHaveLockeEnabled,
     DuplicateTagKeys,
     InvalidContentMD5,
@@ -589,6 +590,7 @@ class ResponseObject(_TemplateEnvironmentMixin, ActionAuthenticatorMixin):
         result_keys, result_folders = self.backend.list_objects(
             bucket, prefix, delimiter
         )
+        encoding_type = querystring.get("encoding-type", [None])[0]
 
         if marker:
             result_keys = self._get_results_from_token(result_keys, marker)
@@ -610,6 +612,7 @@ class ResponseObject(_TemplateEnvironmentMixin, ActionAuthenticatorMixin):
                 is_truncated=is_truncated,
                 next_marker=next_marker,
                 max_keys=max_keys,
+                encoding_type=encoding_type,
             ),
         )
 
@@ -641,6 +644,7 @@ class ResponseObject(_TemplateEnvironmentMixin, ActionAuthenticatorMixin):
         fetch_owner = querystring.get("fetch-owner", [False])[0]
         max_keys = int(querystring.get("max-keys", [1000])[0])
         start_after = querystring.get("start-after", [None])[0]
+        encoding_type = querystring.get("encoding-type", [None])[0]
 
         if continuation_token or start_after:
             limit = continuation_token or start_after
@@ -665,6 +669,7 @@ class ResponseObject(_TemplateEnvironmentMixin, ActionAuthenticatorMixin):
             is_truncated=is_truncated,
             next_continuation_token=next_continuation_token,
             start_after=None if continuation_token else start_after,
+            encoding_type=encoding_type,
         )
 
     @staticmethod
@@ -954,9 +959,13 @@ class ResponseObject(_TemplateEnvironmentMixin, ActionAuthenticatorMixin):
 
         if self.is_delete_keys(request, path, bucket_name):
             self.data["Action"] = "DeleteObject"
-            self._authenticate_and_authorize_s3_action()
-
-            return self._bucket_response_delete_keys(body, bucket_name)
+            try:
+                self._authenticate_and_authorize_s3_action()
+                return self._bucket_response_delete_keys(body, bucket_name)
+            except BucketAccessDeniedError:
+                return self._bucket_response_delete_keys(
+                    body, bucket_name, authenticated=False
+                )
 
         self.data["Action"] = "PutObject"
         self._authenticate_and_authorize_s3_action()
@@ -1018,7 +1027,7 @@ class ResponseObject(_TemplateEnvironmentMixin, ActionAuthenticatorMixin):
             else path_url(request.url)
         )
 
-    def _bucket_response_delete_keys(self, body, bucket_name):
+    def _bucket_response_delete_keys(self, body, bucket_name, authenticated=True):
         template = self.response_template(S3_DELETE_KEYS_RESPONSE)
         body_dict = xmltodict.parse(body, strip_whitespace=False)
 
@@ -1030,13 +1039,18 @@ class ResponseObject(_TemplateEnvironmentMixin, ActionAuthenticatorMixin):
         if len(objects) == 0:
             raise MalformedXML()
 
-        deleted_objects = self.backend.delete_objects(bucket_name, objects)
-        error_names = []
+        if authenticated:
+            deleted_objects = self.backend.delete_objects(bucket_name, objects)
+            errors = []
+        else:
+            deleted_objects = []
+            # [(key_name, errorcode, 'error message'), ..]
+            errors = [(o["Key"], "AccessDenied", "Access Denied") for o in objects]
 
         return (
             200,
             {},
-            template.render(deleted=deleted_objects, delete_errors=error_names),
+            template.render(deleted=deleted_objects, delete_errors=errors),
         )
 
     def _handle_range_header(self, request, response_headers, response_content):
@@ -2041,13 +2055,16 @@ S3_BUCKET_GET_RESPONSE = """<?xml version="1.0" encoding="UTF-8"?>
   {% if delimiter %}
     <Delimiter>{{ delimiter }}</Delimiter>
   {% endif %}
+  {% if encoding_type %}
+    <EncodingType>{{ encoding_type }}</EncodingType>
+  {% endif %}
   <IsTruncated>{{ is_truncated }}</IsTruncated>
   {% if next_marker %}
     <NextMarker>{{ next_marker }}</NextMarker>
   {% endif %}
   {% for key in result_keys %}
     <Contents>
-      <Key>{{ key.name }}</Key>
+      <Key>{{ key.safe_name(encoding_type) }}</Key>
       <LastModified>{{ key.last_modified_ISO8601 }}</LastModified>
       <ETag>{{ key.etag }}</ETag>
       <Size>{{ key.size }}</Size>
@@ -2078,6 +2095,9 @@ S3_BUCKET_GET_RESPONSE_V2 = """<?xml version="1.0" encoding="UTF-8"?>
 {% if delimiter %}
   <Delimiter>{{ delimiter }}</Delimiter>
 {% endif %}
+{% if encoding_type %}
+  <EncodingType>{{ encoding_type }}</EncodingType>
+{% endif %}
   <IsTruncated>{{ is_truncated }}</IsTruncated>
 {% if next_continuation_token %}
   <NextContinuationToken>{{ next_continuation_token }}</NextContinuationToken>
@@ -2087,7 +2107,7 @@ S3_BUCKET_GET_RESPONSE_V2 = """<?xml version="1.0" encoding="UTF-8"?>
 {% endif %}
   {% for key in result_keys %}
     <Contents>
-      <Key>{{ key.name }}</Key>
+      <Key>{{ key.safe_name(encoding_type) }}</Key>
       <LastModified>{{ key.last_modified_ISO8601 }}</LastModified>
       <ETag>{{ key.etag }}</ETag>
       <Size>{{ key.size }}</Size>
@@ -2285,9 +2305,11 @@ S3_DELETE_KEYS_RESPONSE = """<?xml version="1.0" encoding="UTF-8"?>
 {% if v %}<VersionId>{{v}}</VersionId>{% endif %}
 </Deleted>
 {% endfor %}
-{% for k in delete_errors %}
+{% for k,c,m in delete_errors %}
 <Error>
 <Key>{{k}}</Key>
+<Code>{{c}}</Code>
+<Message>{{m}}</Message>
 </Error>
 {% endfor %}
 </DeleteResult>"""
@@ -2446,7 +2468,7 @@ S3_ALL_MULTIPARTS = (
     <UploadId>{{ upload.id }}</UploadId>
     <Initiator>
       <ID>arn:aws:iam::"""
-    + ACCOUNT_ID
+    + get_account_id()
     + """:user/user1-11111a31-17b5-4fb7-9df5-b111111f13de</ID>
       <DisplayName>user1-11111a31-17b5-4fb7-9df5-b111111f13de</DisplayName>
     </Initiator>

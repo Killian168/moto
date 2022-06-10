@@ -22,7 +22,7 @@
 
 ## apigateway
 <details>
-<summary>62% implemented</summary>
+<summary>65% implemented</summary>
 
 - [X] create_api_key
 - [X] create_authorizer
@@ -93,7 +93,7 @@
 - [X] get_request_validator
 - [X] get_request_validators
 - [X] get_resource
-- [ ] get_resources
+- [X] get_resources
 - [X] get_rest_api
 - [ ] get_rest_apis
 - [ ] get_sdk
@@ -111,13 +111,13 @@
 - [X] get_vpc_links
 - [ ] import_api_keys
 - [ ] import_documentation_parts
-- [ ] import_rest_api
+- [X] import_rest_api
 - [X] put_gateway_response
 - [X] put_integration
 - [X] put_integration_response
 - [X] put_method
 - [X] put_method_response
-- [ ] put_rest_api
+- [X] put_rest_api
 - [ ] tag_resource
 - [ ] test_invoke_authorizer
 - [ ] test_invoke_method
@@ -536,7 +536,7 @@
 
 ## cloudfront
 <details>
-<summary>4% implemented</summary>
+<summary>5% implemented</summary>
 
 - [ ] associate_alias
 - [ ] create_cache_policy
@@ -620,7 +620,7 @@
 - [ ] untag_resource
 - [ ] update_cache_policy
 - [ ] update_cloud_front_origin_access_identity
-- [ ] update_distribution
+- [X] update_distribution
 - [ ] update_field_level_encryption_config
 - [ ] update_field_level_encryption_profile
 - [ ] update_function
@@ -1069,30 +1069,30 @@
 
 ## databrew
 <details>
-<summary>22% implemented</summary>
+<summary>34% implemented</summary>
 
 - [ ] batch_delete_recipe_version
-- [ ] create_dataset
+- [X] create_dataset
 - [ ] create_profile_job
 - [ ] create_project
 - [X] create_recipe
 - [ ] create_recipe_job
 - [X] create_ruleset
 - [ ] create_schedule
-- [ ] delete_dataset
+- [X] delete_dataset
 - [ ] delete_job
 - [ ] delete_project
 - [X] delete_recipe_version
 - [X] delete_ruleset
 - [ ] delete_schedule
-- [ ] describe_dataset
+- [X] describe_dataset
 - [ ] describe_job
 - [ ] describe_job_run
 - [ ] describe_project
 - [ ] describe_recipe
 - [ ] describe_ruleset
 - [ ] describe_schedule
-- [ ] list_datasets
+- [X] list_datasets
 - [ ] list_job_runs
 - [ ] list_jobs
 - [ ] list_projects
@@ -1108,7 +1108,7 @@
 - [ ] stop_job_run
 - [ ] tag_resource
 - [ ] untag_resource
-- [ ] update_dataset
+- [X] update_dataset
 - [ ] update_profile_job
 - [ ] update_project
 - [X] update_recipe
@@ -1411,6 +1411,18 @@
 - [X] get_records
 - [X] get_shard_iterator
 - [X] list_streams
+</details>
+
+## ebs
+<details>
+<summary>100% implemented</summary>
+
+- [X] complete_snapshot
+- [X] get_snapshot_block
+- [X] list_changed_blocks
+- [X] list_snapshot_blocks
+- [X] put_snapshot_block
+- [X] start_snapshot
 </details>
 
 ## ec2
@@ -1790,6 +1802,7 @@
 - [ ] get_groups_for_capacity_reservation
 - [ ] get_host_reservation_purchase_preview
 - [ ] get_instance_types_from_instance_requirements
+- [ ] get_instance_uefi_data
 - [ ] get_ipam_address_history
 - [ ] get_ipam_pool_allocations
 - [ ] get_ipam_pool_cidrs
@@ -2279,7 +2292,7 @@
 
 ## elb
 <details>
-<summary>62% implemented</summary>
+<summary>65% implemented</summary>
 
 - [ ] add_tags
 - [X] apply_security_groups_to_load_balancer
@@ -2295,7 +2308,7 @@
 - [X] delete_load_balancer_policy
 - [ ] deregister_instances_from_load_balancer
 - [ ] describe_account_limits
-- [ ] describe_instance_health
+- [X] describe_instance_health
 - [ ] describe_load_balancer_attributes
 - [X] describe_load_balancer_policies
 - [ ] describe_load_balancer_policy_types
@@ -2560,7 +2573,7 @@
 
 ## forecast
 <details>
-<summary>11% implemented</summary>
+<summary>9% implemented</summary>
 
 - [ ] create_auto_predictor
 - [ ] create_dataset
@@ -2570,6 +2583,7 @@
 - [ ] create_explainability_export
 - [ ] create_forecast
 - [ ] create_forecast_export_job
+- [ ] create_monitor
 - [ ] create_predictor
 - [ ] create_predictor_backtest_export_job
 - [ ] delete_dataset
@@ -2579,6 +2593,7 @@
 - [ ] delete_explainability_export
 - [ ] delete_forecast
 - [ ] delete_forecast_export_job
+- [ ] delete_monitor
 - [ ] delete_predictor
 - [ ] delete_predictor_backtest_export_job
 - [ ] delete_resource_tree
@@ -2590,6 +2605,7 @@
 - [ ] describe_explainability_export
 - [ ] describe_forecast
 - [ ] describe_forecast_export_job
+- [ ] describe_monitor
 - [ ] describe_predictor
 - [ ] describe_predictor_backtest_export_job
 - [ ] get_accuracy_metrics
@@ -2600,9 +2616,12 @@
 - [ ] list_explainability_exports
 - [ ] list_forecast_export_jobs
 - [ ] list_forecasts
+- [ ] list_monitor_evaluations
+- [ ] list_monitors
 - [ ] list_predictor_backtest_export_jobs
 - [ ] list_predictors
 - [ ] list_tags_for_resource
+- [ ] resume_resource
 - [ ] stop_resource
 - [ ] tag_resource
 - [ ] untag_resource
@@ -2650,7 +2669,7 @@
 
 ## glue
 <details>
-<summary>10% implemented</summary>
+<summary>12% implemented</summary>
 
 - [ ] batch_create_partition
 - [ ] batch_delete_connection
@@ -2763,7 +2782,7 @@
 - [ ] get_table_version
 - [ ] get_table_versions
 - [X] get_tables
-- [ ] get_tags
+- [X] get_tags
 - [ ] get_trigger
 - [ ] get_triggers
 - [ ] get_unfiltered_partition_metadata
@@ -2777,7 +2796,7 @@
 - [ ] get_workflow_runs
 - [ ] import_catalog_to_glue
 - [ ] list_blueprints
-- [ ] list_crawlers
+- [X] list_crawlers
 - [ ] list_custom_entity_types
 - [ ] list_dev_endpoints
 - [X] list_jobs
@@ -2815,8 +2834,8 @@
 - [ ] stop_session
 - [ ] stop_trigger
 - [ ] stop_workflow_run
-- [ ] tag_resource
-- [ ] untag_resource
+- [X] tag_resource
+- [X] untag_resource
 - [ ] update_blueprint
 - [ ] update_classifier
 - [ ] update_column_statistics_for_partition
@@ -2839,20 +2858,20 @@
 
 ## guardduty
 <details>
-<summary>3% implemented</summary>
+<summary>18% implemented</summary>
 
 - [ ] accept_invitation
 - [ ] archive_findings
 - [X] create_detector
-- [ ] create_filter
+- [X] create_filter
 - [ ] create_ip_set
 - [ ] create_members
 - [ ] create_publishing_destination
 - [ ] create_sample_findings
 - [ ] create_threat_intel_set
 - [ ] decline_invitations
-- [ ] delete_detector
-- [ ] delete_filter
+- [X] delete_detector
+- [X] delete_filter
 - [ ] delete_invitations
 - [ ] delete_ip_set
 - [ ] delete_members
@@ -2863,9 +2882,9 @@
 - [ ] disable_organization_admin_account
 - [ ] disassociate_from_master_account
 - [ ] disassociate_members
-- [ ] enable_organization_admin_account
-- [ ] get_detector
-- [ ] get_filter
+- [X] enable_organization_admin_account
+- [X] get_detector
+- [X] get_filter
 - [ ] get_findings
 - [ ] get_findings_statistics
 - [ ] get_invitations_count
@@ -2882,7 +2901,7 @@
 - [ ] list_invitations
 - [ ] list_ip_sets
 - [ ] list_members
-- [ ] list_organization_admin_accounts
+- [X] list_organization_admin_accounts
 - [ ] list_publishing_destinations
 - [ ] list_tags_for_resource
 - [ ] list_threat_intel_sets
@@ -2891,8 +2910,8 @@
 - [ ] tag_resource
 - [ ] unarchive_findings
 - [ ] untag_resource
-- [ ] update_detector
-- [ ] update_filter
+- [X] update_detector
+- [X] update_filter
 - [ ] update_findings_feedback
 - [ ] update_ip_set
 - [ ] update_member_detectors
@@ -3399,13 +3418,13 @@
 
 ## kms
 <details>
-<summary>42% implemented</summary>
+<summary>52% implemented</summary>
 
 - [X] cancel_key_deletion
 - [ ] connect_custom_key_store
 - [ ] create_alias
 - [ ] create_custom_key_store
-- [ ] create_grant
+- [X] create_grant
 - [X] create_key
 - [X] decrypt
 - [X] delete_alias
@@ -3431,16 +3450,16 @@
 - [ ] get_public_key
 - [ ] import_key_material
 - [ ] list_aliases
-- [ ] list_grants
+- [X] list_grants
 - [ ] list_key_policies
 - [X] list_keys
 - [X] list_resource_tags
-- [ ] list_retirable_grants
+- [X] list_retirable_grants
 - [X] put_key_policy
 - [X] re_encrypt
 - [ ] replicate_key
-- [ ] retire_grant
-- [ ] revoke_grant
+- [X] retire_grant
+- [X] revoke_grant
 - [X] schedule_key_deletion
 - [ ] sign
 - [X] tag_resource
@@ -4181,6 +4200,7 @@
 - [X] update_group
 - [ ] update_iam_policy_assignment
 - [ ] update_ip_restriction
+- [ ] update_public_sharing_settings
 - [ ] update_template
 - [ ] update_template_alias
 - [ ] update_template_permissions
@@ -4282,7 +4302,7 @@
 - [X] describe_db_clusters
 - [ ] describe_db_engine_versions
 - [ ] describe_db_instance_automated_backups
-- [ ] describe_db_instances
+- [X] describe_db_instances
 - [ ] describe_db_log_files
 - [X] describe_db_parameter_groups
 - [ ] describe_db_parameters
@@ -4504,7 +4524,7 @@
 
 ## rekognition
 <details>
-<summary>3% implemented</summary>
+<summary>6% implemented</summary>
 
 - [ ] compare_faces
 - [ ] create_collection
@@ -4534,7 +4554,7 @@
 - [ ] get_celebrity_recognition
 - [ ] get_content_moderation
 - [ ] get_face_detection
-- [ ] get_face_search
+- [X] get_face_search
 - [ ] get_label_detection
 - [ ] get_person_tracking
 - [ ] get_segment_detection
@@ -4552,7 +4572,7 @@
 - [ ] start_celebrity_recognition
 - [ ] start_content_moderation
 - [ ] start_face_detection
-- [ ] start_face_search
+- [X] start_face_search
 - [ ] start_label_detection
 - [ ] start_person_tracking
 - [ ] start_project_version
@@ -5876,9 +5896,9 @@
 - dlm
 - docdb
 - drs
-- ebs
 - ecr-public
 - elastic-inference
+- emr-serverless
 - evidently
 - finspace
 - finspace-data

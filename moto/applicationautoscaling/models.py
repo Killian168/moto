@@ -1,4 +1,4 @@
-from moto.core import ACCOUNT_ID, BaseBackend, BaseModel
+from moto.core import get_account_id, BaseBackend, BaseModel
 from moto.core.utils import BackendDict
 from moto.ecs import ecs_backends
 from .exceptions import AWSValidationException
@@ -11,6 +11,8 @@ import uuid
 @unique
 class ResourceTypeExceptionValueSet(Enum):
     RESOURCE_TYPE = "ResourceType"
+    # MSK currently only has the "broker-storage" resource type which is not part of the resource_id
+    KAFKA_BROKER_STORAGE = "broker-storage"
 
 
 @unique
@@ -26,6 +28,7 @@ class ServiceNamespaceValueSet(Enum):
     COMPREHEND = "comprehend"
     ECS = "ecs"
     SAGEMAKER = "sagemaker"
+    KAFKA = "kafka"
 
 
 @unique
@@ -56,6 +59,7 @@ class ScalableDimensionValueSet(Enum):
     SAGEMAKER_VARIANT_DESIRED_INSTANCE_COUNT = "sagemaker:variant:DesiredInstanceCount"
     EC2_SPOT_FLEET_REQUEST_TARGET_CAPACITY = "ec2:spot-fleet-request:TargetCapacity"
     ECS_SERVICE_DESIRED_COUNT = "ecs:service:DesiredCount"
+    KAFKA_BROKER_STORAGE_VOLUME_SIZE = "kafka:broker-storage:VolumeSize"
 
 
 class ApplicationAutoscalingBackend(BaseBackend):
@@ -424,8 +428,12 @@ class FakeApplicationAutoscalingPolicy(BaseModel):
         self.policy_name = policy_name
         self.policy_type = policy_type
         self._guid = uuid.uuid4()
-        self.policy_arn = "arn:aws:autoscaling:{}:scalingPolicy:{}:resource/sagemaker/{}:policyName/{}".format(
-            region_name, self._guid, self.resource_id, self.policy_name
+        self.policy_arn = "arn:aws:autoscaling:{}:scalingPolicy:{}:resource/{}/{}:policyName/{}".format(
+            region_name,
+            self._guid,
+            self.service_namespace,
+            self.resource_id,
+            self.policy_name,
         )
         self.creation_time = time.time()
 
@@ -450,7 +458,7 @@ class FakeScheduledAction(BaseModel):
         scalable_target_action,
         region,
     ):
-        self.arn = f"arn:aws:autoscaling:{region}:{ACCOUNT_ID}:scheduledAction:{service_namespace}:scheduledActionName/{scheduled_action_name}"
+        self.arn = f"arn:aws:autoscaling:{region}:{get_account_id()}:scheduledAction:{service_namespace}:scheduledActionName/{scheduled_action_name}"
         self.service_namespace = service_namespace
         self.schedule = schedule
         self.timezone = timezone

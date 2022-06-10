@@ -281,9 +281,7 @@ class SecretsManagerBackend(BaseBackend):
         ):
             raise SecretHasNoValueException(version_stage or "AWSCURRENT")
 
-        response = json.dumps(response_data)
-
-        return response
+        return response_data
 
     def update_secret(
         self,
@@ -442,7 +440,7 @@ class SecretsManagerBackend(BaseBackend):
 
         secret = self.secrets[secret_id]
 
-        return json.dumps(secret.to_dict())
+        return secret.to_dict()
 
     def rotate_secret(
         self,
@@ -638,32 +636,6 @@ class SecretsManagerBackend(BaseBackend):
     def list_secrets(
         self, filters: List, max_results: int = 100, next_token: str = None
     ) -> Tuple[List, str]:
-        """
-        Returns secrets from secretsmanager.
-        The result is paginated and page items depends on the token value, because token contains start element
-        number of secret list.
-        Response example:
-        {
-            SecretList: [
-                {
-                    ARN: 'arn:aws:secretsmanager:us-east-1:1234567890:secret:test1-gEcah',
-                    Name: 'test1',
-                    ...
-                },
-                {
-                    ARN: 'arn:aws:secretsmanager:us-east-1:1234567890:secret:test2-KZwml',
-                    Name: 'test2',
-                    ...
-                }
-            ],
-            NextToken: '2'
-        }
-
-        :param filters: (List) Filter parameters.
-        :param max_results: (int) Max number of results per page.
-        :param next_token: (str) Page token.
-        :return: (Tuple[List,str]) Returns result list and next token.
-        """
         secret_list = []
         for secret in self.secrets.values():
             if _matches(secret, filters):

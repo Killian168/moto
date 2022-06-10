@@ -10,7 +10,7 @@ import random
 from jose import jws
 from collections import OrderedDict
 from moto.core import BaseBackend, BaseModel
-from moto.core import ACCOUNT_ID as DEFAULT_ACCOUNT_ID
+from moto.core import get_account_id
 from moto.core.utils import BackendDict
 from .exceptions import (
     GroupExistsException,
@@ -370,7 +370,7 @@ class CognitoIdpUserPool(BaseModel):
         self.region = region
         self.id = "{}_{}".format(self.region, str(uuid.uuid4().hex))
         self.arn = "arn:aws:cognito-idp:{}:{}:userpool/{}".format(
-            self.region, DEFAULT_ACCOUNT_ID, self.id
+            self.region, get_account_id(), self.id
         )
         self.name = name
         self.status = None
@@ -1270,8 +1270,8 @@ class CognitoIdpBackend(BaseBackend):
         elif auth_flow is AuthFlow.REFRESH_TOKEN:
             refresh_token = auth_parameters.get("REFRESH_TOKEN")
             (
-                id_token,
                 access_token,
+                id_token,
                 expires_in,
             ) = user_pool.create_tokens_from_refresh_token(refresh_token)
 
@@ -1384,7 +1384,9 @@ class CognitoIdpBackend(BaseBackend):
             raise ResourceNotFoundError(client_id)
 
     def forgot_password(self, client_id, username):
-        """The ForgotPassword operation is partially broken in AWS. If the input is 100% correct it works fine.
+        """
+        The ForgotPassword operation is partially broken in AWS. If the input is 100% correct it works fine.
+
         Otherwise you get semi-random garbage and HTTP 200 OK, for example:
         - recovery for username which is not registered in any cognito pool
         - recovery for username belonging to a different user pool than the client id is registered to
@@ -1833,6 +1835,14 @@ class GlobalCognitoIdpBackend(CognitoIdpBackend):
     def get_user(self, access_token):
         backend = self._find_backend_by_access_token(access_token)
         return backend.get_user(access_token)
+
+    def respond_to_auth_challenge(
+        self, session, client_id, challenge_name, challenge_responses
+    ):
+        backend = self._find_backend_for_clientid(client_id)
+        return backend.respond_to_auth_challenge(
+            session, client_id, challenge_name, challenge_responses
+        )
 
 
 cognitoidp_backends = BackendDict(CognitoIdpBackend, "cognito-idp")
