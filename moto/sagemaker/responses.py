@@ -578,12 +578,32 @@ class SageMakerResponse(BaseResponse):
         )
         return 200, {}, json.dumps(response)
 
+    @amzn_request_id
     def update_endpoint_weights_and_capacities(self):
         endpoint_name = self._get_param("EndpointName")
         desired_weights_and_capacities = self._get_param("DesiredWeightsAndCapacities")
         endpoint_arn = self.sagemaker_backend.update_endpoint_weights_and_capacities(
             endpoint_name=endpoint_name,
             desired_weights_and_capacities=desired_weights_and_capacities,
+        )
+        response = {"EndpointArn": endpoint_arn}
+        return 200, {}, json.dumps(response)
+
+    @amzn_request_id
+    def update_endpoint(self):
+        endpoint_name = self._get_param("EndpointName")
+        endpoint_config_name = self._get_param("EndpointConfigName")
+        retain_all_variant_properties = self._get_param("RetainAllVariantProperties")
+        exclude_retained_variant_properties = self._get_param("ExcludeRetainedVariantProperties")
+        deployment_config = self._get_param("DeploymentConfig")
+        retain_deployment_config = self._get_param("RetainDeploymentConfig")
+        endpoint_arn = self.sagemaker_backend.update_endpoint(
+            endpoint_name=endpoint_name,
+            endpoint_config_name=endpoint_config_name,
+            retain_all_variant_properties=retain_all_variant_properties,
+            exclude_retained_variant_properties=exclude_retained_variant_properties,
+            deployment_config=deployment_config,
+            retain_deployment_config=retain_deployment_config,
         )
         response = {"EndpointArn": endpoint_arn}
         return 200, {}, json.dumps(response)

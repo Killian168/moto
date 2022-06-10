@@ -1090,6 +1090,22 @@ class SageMakerModelBackend(BaseBackend):
         }
         return api_service + [notebook_service, studio_service]
 
+    def _get_endpoint(self, endpoint_name):
+        endpoint = self.endpoints.get(endpoint_name, None)
+        if not endpoint:
+            raise AWSValidationException(
+                f'Could not find endpoint "{FakeEndpoint.arn_formatter(endpoint_name, self.region_name)}".'
+            )
+        return endpoint
+
+    def _get_endpoint_config(self, endpoint_config_name):
+        endpoint_config = self.endpoint_configs.get(endpoint_config_name, None)
+        if not endpoint_config:
+            raise AWSValidationException(
+                f'Could not find endpoint_config "{FakeEndpointConfig.arn_formatter(endpoint_config, self.region_name)}".'
+            )
+        return endpoint_config
+
     def create_model(self, **kwargs):
         model_obj = Model(
             region_name=self.region_name,
@@ -1603,13 +1619,7 @@ class SageMakerModelBackend(BaseBackend):
                 raise ValidationError(message=message)
 
     def describe_endpoint_config(self, endpoint_config_name):
-        try:
-            return self.endpoint_configs[endpoint_config_name].response_object
-        except KeyError:
-            message = "Could not find endpoint configuration '{}'.".format(
-                FakeEndpointConfig.arn_formatter(endpoint_config_name, self.region_name)
-            )
-            raise ValidationError(message=message)
+        return self._get_endpoint_config(endpoint_config_name).response_object
 
     def delete_endpoint_config(self, endpoint_config_name):
         try:
@@ -1621,13 +1631,7 @@ class SageMakerModelBackend(BaseBackend):
             raise ValidationError(message=message)
 
     def create_endpoint(self, endpoint_name, endpoint_config_name, tags):
-        try:
-            endpoint_config = self.describe_endpoint_config(endpoint_config_name)
-        except KeyError:
-            message = "Could not find endpoint_config '{}'.".format(
-                FakeEndpointConfig.arn_formatter(endpoint_config_name, self.region_name)
-            )
-            raise ValidationError(message=message)
+        endpoint_config = self._get_endpoint_config(endpoint_config_name)
 
         endpoint = FakeEndpoint(
             region_name=self.region_name,
@@ -1642,13 +1646,7 @@ class SageMakerModelBackend(BaseBackend):
         return endpoint
 
     def describe_endpoint(self, endpoint_name):
-        try:
-            return self.endpoints[endpoint_name].response_object
-        except KeyError:
-            message = "Could not find endpoint '{}'.".format(
-                FakeEndpoint.arn_formatter(endpoint_name, self.region_name)
-            )
-            raise ValidationError(message=message)
+        return self._get_endpoint(endpoint_name).response_object
 
     def delete_endpoint(self, endpoint_name):
         try:
@@ -1932,11 +1930,7 @@ class SageMakerModelBackend(BaseBackend):
         self, endpoint_name, desired_weights_and_capacities
     ):
         # Validate inputs
-        endpoint = self.endpoints.get(endpoint_name, None)
-        if not endpoint:
-            raise AWSValidationException(
-                f'Could not find endpoint "{FakeEndpoint.arn_formatter(endpoint_name, self.region_name)}".'
-            )
+        endpoint = self._get_endpoint(endpoint_name)
 
         names_checked = []
         for variant_config in desired_weights_and_capacities:
@@ -1976,6 +1970,17 @@ class SageMakerModelBackend(BaseBackend):
         endpoint.endpoint_status = "InService"
         return endpoint.endpoint_arn
 
+    def update_endpoint(self, endpoint_name, endpoint_config_name, retain_all_variant_properties, exclude_retained_variant_properties, deployment_config, retain_deployment_config):
+        endpoint = self._get_endpoint(endpoint_name)
+        endpoint_config = self._get_endpoint_config(endpoint_config_name)
+
+        if retain_all_variant_properties:
+            exclude_retained_variant_properties
+        else:
+
+
+        return endpoint.endpoint_arn
+    
 
 class FakeExperiment(BaseObject):
     def __init__(self, region_name, experiment_name, tags):
