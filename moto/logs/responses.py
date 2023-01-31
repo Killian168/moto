@@ -369,18 +369,24 @@ class LogsResponse(BaseResponse):
     def start_query(self):
         log_group_name = self._get_param("logGroupName")
         log_group_names = self._get_param("logGroupNames")
+        log_group_identifiers = self._get_param("logGroupIdentifiers")
         start_time = self._get_param("startTime")
         end_time = self._get_param("endTime")
         query_string = self._get_param("queryString")
 
+        too_many_groups_message = "Only one of the parameters 'logGroupName', 'logGroupNames' or 'logGroupIdentifiers' may be specified in a request"
         if log_group_name and log_group_names:
-            raise InvalidParameterException()
+            raise InvalidParameterException(too_many_groups_message)
+        elif log_group_name and log_group_identifiers:
+            raise InvalidParameterException(too_many_groups_message)
+        elif log_group_names and log_group_identifiers:
+            raise InvalidParameterException(too_many_groups_message)
 
         if log_group_name:
             log_group_names = [log_group_name]
 
         query_id = self.logs_backend.start_query(
-            log_group_names, start_time, end_time, query_string
+            log_group_names, log_group_identifiers, start_time, end_time, query_string
         )
 
         return json.dumps({"queryId": f"{query_id}"})
@@ -392,3 +398,18 @@ class LogsResponse(BaseResponse):
             log_group_name=log_group_name, destination=destination
         )
         return json.dumps(dict(taskId=str(task_id)))
+    
+    def describe_queries(self):
+        params = self._get_params()
+        log_group_name = params.get("logGroupName")
+        status = params.get("status")
+        max_results = params.get("maxResults")
+        next_token = params.get("nextToken")
+        queries, next_token = self.logs_backend.describe_queries(
+            log_group_name=log_group_name,
+            status=status,
+            max_results=max_results,
+            next_token=next_token,
+        )
+        # TODO: adjust response
+        return json.dumps(dict(queries=queries, nextToken=next_token))

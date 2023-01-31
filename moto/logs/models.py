@@ -940,11 +940,16 @@ class LogsBackend(BaseBackend):
 
         log_group.delete_subscription_filter(filter_name)
 
-    def start_query(self, log_group_names, start_time, end_time, query_string):
-
-        for log_group_name in log_group_names:
-            if log_group_name not in self.groups:
-                raise ResourceNotFoundException()
+    def start_query(self, log_group_names, log_group_identifiers, start_time, end_time, query_string):
+        if log_group_names:
+            for log_group_name in log_group_names:
+                if log_group_name not in self.groups:
+                    raise ResourceNotFoundException()
+        else:
+            for log_group_id in log_group_identifiers:
+                for v in self.groups.values():
+                    if log_group_id != v.arn:
+                        raise ResourceNotFoundException()
 
         query_id = mock_random.uuid1()
         self.queries[query_id] = LogQuery(query_id, start_time, end_time, query_string)
@@ -957,5 +962,9 @@ class LogsBackend(BaseBackend):
         task_id = mock_random.uuid4()
         return task_id
 
+    def describe_queries(self, log_group_name, status, max_results, next_token):
+        # implement here
+        return queries, next_token
+    
 
 logs_backends = BackendDict(LogsBackend, "logs")

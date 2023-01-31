@@ -6,7 +6,7 @@ from uuid import UUID
 
 import boto3
 import pytest
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, ParamValidationError
 from freezegun import freeze_time
 
 from moto import mock_logs, mock_s3, settings
@@ -1135,6 +1135,24 @@ def test_start_query():
 
     assert "queryId" in response
 
+    log_group_response = client.describe_log_groups(
+        logGroupNamePrefix=log_group_name,
+    )
+    log_group_arn = log_group_response['logGroups'][0]['arn']
+
+    response = client.start_query(
+        logGroupIdentifiers=[log_group_arn],
+        startTime=int(time.time()),
+        endTime=int(time.time()) + 300,
+        queryString="test",
+    )
+
+    assert "queryId" in response
+
+@mock_logs
+def test_start_query_exceptions():
+    client = boto3.client("logs", "us-east-1")
+
     with pytest.raises(ClientError) as exc:
         client.start_query(
             logGroupName="/aws/codebuild/lowercase-dev-invalid",
@@ -1150,6 +1168,53 @@ def test_start_query():
         "The specified log group does not exist"
     )
 
+    with pytest.raises(ClientError) as exc:
+        client.start_query(
+            logGroupNames=["/aws/codebuild/lowercase-dev-invalid"],
+            logGroupIdentifiers=["/aws/codebuild/lowercase-dev-invalid"],
+            startTime=int(time.time()),
+            endTime=int(time.time()) + 300,
+            queryString="test",
+        )
+
+    # then
+    exc_value = exc.value
+    exc_value.response["Error"]["Code"].should.contain("InvalidParameterException")
+    exc_value.response["Error"]["Message"].should.equal(
+        "Only one of the parameters 'logGroupName', 'logGroupNames' or 'logGroupIdentifiers' may be specified in a request"
+    )
+
+    with pytest.raises(ClientError) as exc:
+        client.start_query(
+            logGroupName="/aws/codebuild/lowercase-dev-invalid",
+            logGroupIdentifiers=["/aws/codebuild/lowercase-dev-invalid"],
+            startTime=int(time.time()),
+            endTime=int(time.time()) + 300,
+            queryString="test",
+        )
+
+    # then
+    exc_value = exc.value
+    exc_value.response["Error"]["Code"].should.contain("InvalidParameterException")
+    exc_value.response["Error"]["Message"].should.equal(
+        "Only one of the parameters 'logGroupName', 'logGroupNames' or 'logGroupIdentifiers' may be specified in a request"
+    )
+
+    with pytest.raises(ClientError) as exc:
+        client.start_query(
+            logGroupName="/aws/codebuild/lowercase-dev-invalid",
+            logGroupNames=["/aws/codebuild/lowercase-dev-invalid"],
+            startTime=int(time.time()),
+            endTime=int(time.time()) + 300,
+            queryString="test",
+        )
+
+    # then
+    exc_value = exc.value
+    exc_value.response["Error"]["Code"].should.contain("InvalidParameterException")
+    exc_value.response["Error"]["Message"].should.equal(
+        "Only one of the parameters 'logGroupName', 'logGroupNames' or 'logGroupIdentifiers' may be specified in a request"
+    )
 
 @pytest.mark.parametrize("nr_of_events", [10001, 1000000])
 @mock_logs
@@ -1342,3 +1407,11 @@ def test_create_export_raises_ResourceNotFoundException_log_group_not_found():
             to=to,
             destination=destination,
         )
+
+
+@mock_logs
+def test_describe_queries():
+    client = boto3.client("logs", region_name="us-east-2")
+    resp = client.describe_queries()
+
+    raise Exception("NotYetImplemented")
