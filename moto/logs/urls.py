@@ -1,4 +1,3 @@
-    "{0}/$": CloudWatchLogsResponse.dispatch,
 from .responses import LogsResponse
 
 url_bases = [r"https?://logs\.(.+)\.amazonaws\.com"]

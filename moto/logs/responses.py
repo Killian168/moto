@@ -411,5 +411,4 @@ class LogsResponse(BaseResponse):
             max_results=max_results,
             next_token=next_token,
         )
-        # TODO: adjust response
         return json.dumps(dict(queries=queries, nextToken=next_token))

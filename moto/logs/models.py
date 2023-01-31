@@ -19,7 +19,8 @@ MAX_RESOURCE_POLICIES_PER_REGION = 10
 
 
 class LogQuery(BaseModel):
-    def __init__(self, query_id, start_time, end_time, query):
+    def __init__(self, log_group_names, query_id, start_time, end_time, query):
+        self.log_group_names = log_group_names
         self.query_id = query_id
         self.start_time = start_time
         self.end_time = end_time
@@ -946,13 +947,16 @@ class LogsBackend(BaseBackend):
                 if log_group_name not in self.groups:
                     raise ResourceNotFoundException()
         else:
+            log_group_names = []
             for log_group_id in log_group_identifiers:
                 for v in self.groups.values():
                     if log_group_id != v.arn:
                         raise ResourceNotFoundException()
+                    else:
+                        log_group_names.append(v.name)
 
         query_id = mock_random.uuid1()
-        self.queries[query_id] = LogQuery(query_id, start_time, end_time, query_string)
+        self.queries[query_id] = LogQuery(log_group_names, query_id, start_time, end_time, query_string)
         return query_id
 
     def create_export_task(self, log_group_name, destination):
@@ -962,9 +966,25 @@ class LogsBackend(BaseBackend):
         task_id = mock_random.uuid4()
         return task_id
 
-    def describe_queries(self, log_group_name, status, max_results, next_token):
-        # implement here
-        return queries, next_token
+    @paginate(pagination_model=PAGINATION_MODEL)
+    def describe_queries(self, log_group_name, status):
+        res_queries = []
+
+        for query in self.queries:
+            if log_group_name and status:
+                # Filter by name and status
+                if query.name == log_group_name and query.status == status:
+                    res_queries.append(query)
+            elif log_group_name:
+                # Filter by status
+                if query.name == log_group_name:
+                    res_queries.append(query)
+            elif status:
+                # Filter by status
+                if query.status == status:
+                    res_queries.append(query)
+
+        return res_queries
     
 
 logs_backends = BackendDict(LogsBackend, "logs")

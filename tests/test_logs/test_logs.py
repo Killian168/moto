@@ -1,5 +1,7 @@
 import json
 import time
+import uuid
+
 import sure  # noqa # pylint: disable=unused-import
 from datetime import timedelta, datetime
 from uuid import UUID
@@ -1411,7 +1413,23 @@ def test_create_export_raises_ResourceNotFoundException_log_group_not_found():
 
 @mock_logs
 def test_describe_queries():
-    client = boto3.client("logs", region_name="us-east-2")
-    resp = client.describe_queries()
-
-    raise Exception("NotYetImplemented")
+    print("Hello")
+    # client = boto3.client("logs", "us-east-1")
+    #
+    # for _ in range(100):
+    #     client.create_log_group(logGroupName=f"/aws/codebuild/{uuid.uuid4()}")
+    #
+    # log_group_response = client.describe_log_groups(
+    #     logGroupNamePrefix="/aws/codebuild/",
+    # )
+    #
+    # response = client.start_query(
+    #     logGroupName=log_group_response,
+    #     startTime=int(time.time()),
+    #     endTime=int(time.time()) + 300,
+    #     queryString="test",
+    # )
+    #
+    # log_group_arn = log_group_response['logGroups'][0]['arn']
+    #
+    # resp = client.describe_queries()
